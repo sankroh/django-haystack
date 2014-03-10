@@ -1,16 +1,13 @@
 from __future__ import unicode_literals
 import re
-from django.utils import datetime_safe
 from django.utils import six
 from django.template import loader, Context
 from haystack.exceptions import SearchFieldError
+from dateutil import parser
 
 
 class NOT_PROVIDED:
     pass
-
-
-DATETIME_REGEX = re.compile('^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})(T|\s+)(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2}).*?$')
 
 
 # All the SearchFields variants.
@@ -302,12 +299,9 @@ class DateField(SearchField):
             return None
 
         if isinstance(value, six.string_types):
-            match = DATETIME_REGEX.search(value)
-
-            if match:
-                data = match.groupdict()
-                return datetime_safe.date(int(data['year']), int(data['month']), int(data['day']))
-            else:
+            try:
+                return parser.parse(value)
+            except TypeError:
                 raise SearchFieldError("Date provided to '%s' field doesn't appear to be a valid date string: '%s'" % (self.instance_name, value))
 
         return value
@@ -327,12 +321,9 @@ class DateTimeField(SearchField):
             return None
 
         if isinstance(value, six.string_types):
-            match = DATETIME_REGEX.search(value)
-
-            if match:
-                data = match.groupdict()
-                return datetime_safe.datetime(int(data['year']), int(data['month']), int(data['day']), int(data['hour']), int(data['minute']), int(data['second']))
-            else:
+            try:
+                return parser.parse(value)
+            except TypeError:
                 raise SearchFieldError("Datetime provided to '%s' field doesn't appear to be a valid datetime string: '%s'" % (self.instance_name, value))
 
         return value
